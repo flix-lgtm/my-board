@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#0e0f12">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Pannello">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="manifest" href="manifest.webmanifest">
+<title>Il mio pannello</title>
+<style>
+:root{--bg:#0e0f12;--s1:#16181c;--s2:#21242a;--bd:#2b2e35;--tx:#f4f4f6;--mu:#8d919b;--gold:#ffd36b;--ok:#34d399}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;overscroll-behavior:none}
+body{position:fixed;inset:0;width:100%;display:flex;flex-direction:column;background:var(--bg);color:var(--tx);font:16px/1.35 -apple-system,"SF Pro Text",system-ui,sans-serif;padding-top:env(safe-area-inset-top);overflow:hidden;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;-webkit-text-size-adjust:100%}
+input{-webkit-user-select:text;user-select:text}
+button{font:inherit;color:inherit;background:var(--s2);border:0;border-radius:14px;min-height:48px;padding:0 16px;font-weight:600;touch-action:manipulation;display:flex;align-items:center;justify-content:center;gap:8px}
+button:active{opacity:.7}
+button.pri{background:var(--tx);color:var(--bg)}
+button.red{color:#ff7a90}
+button.on{box-shadow:inset 0 0 0 2px var(--tx)}
+button.ib{width:48px;padding:0;flex:none}
+button.gold{color:var(--gold)}
+input,select{font:inherit;color:inherit;background:var(--s2);border:0;border-radius:12px;min-height:48px;padding:0 14px;min-width:0;width:100%}
+#top{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:6px 16px;min-height:54px}
+.h1{font-size:24px;font-weight:800;letter-spacing:-.3px;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pill{max-width:72%;border-radius:999px;min-height:40px;padding:0 16px;font-size:15px}
+.pill span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.c{color:var(--mu);font-size:14px;white-space:nowrap;font-variant-numeric:tabular-nums}
+#area{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;position:relative;touch-action:none;overflow:hidden}
+#stage{position:relative;overflow:hidden;background:#000;border-radius:10px}
+#zoom{position:absolute;inset:0;transform-origin:0 0;will-change:transform}
+#zoom img,#zoom svg{position:absolute;inset:0;width:100%;height:100%;display:block;pointer-events:none}
+#zr{position:absolute;top:10px;right:18px;min-height:36px;padding:0 14px;font-size:13px;background:#000b;display:none;z-index:3}
+#bar,nav{position:relative;z-index:2}
+#bar{padding:14px 16px 10px;display:flex;flex-direction:column;gap:10px;background:var(--s1);border-radius:22px 22px 0 0}
+.row{display:flex;gap:10px;align-items:center}
+.row>button:not(.ib){flex:1}
+.ttl{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.nm{flex:1;min-width:0;font-weight:700;overflow:hidden;text-overflow:ellipsis}
+.ttl .nm{font-size:21px;white-space:nowrap}
+.sub,.nm small{display:block;color:var(--mu);font-size:13.5px;font-weight:500;margin-top:1px}
+.gb{font-size:32px;font-weight:800;letter-spacing:-.5px}
+.tools{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.tools button{min-height:46px;font-size:14px;padding:0 4px;gap:6px}
+.dot{width:12px;height:12px;border-radius:50%;border:2.5px solid;flex:none}
+.hint{color:var(--mu);font-size:13px;text-align:center}
+nav{display:flex;background:var(--s1);border-top:1px solid var(--bd);padding-bottom:env(safe-area-inset-bottom)}
+nav button{flex:1;flex-direction:column;gap:3px;background:none;border-radius:0;min-height:56px;padding:0;font-size:10.5px;font-weight:600;color:var(--mu)}
+nav button.a{color:var(--tx)}
+#panel{position:absolute;inset:0;background:var(--bg);overflow:auto;padding:6px 16px 20px;display:none;z-index:5;touch-action:pan-y;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+.seg{display:flex;background:var(--s1);border-radius:12px;padding:3px;gap:3px;margin-bottom:14px}
+.seg button{flex:1;min-height:38px;background:none;font-size:14px;border-radius:10px}
+.seg button.on{background:var(--s2);box-shadow:none}
+.item{display:flex;align-items:center;gap:12px;background:var(--s1);border-radius:16px;padding:12px 14px;margin-bottom:10px;min-height:64px}
+.item .gr{font-weight:800;font-size:20px;min-width:42px}
+.th{width:56px;height:56px;object-fit:cover;border-radius:10px;background:#000;flex:none}
+.ibg{width:42px;height:42px;border-radius:12px;background:var(--s2);display:flex;align-items:center;justify-content:center;color:var(--gold);flex:none}
+.ok{color:var(--ok);font-weight:700;font-size:14px}
+.mu{color:var(--mu);font-size:14px}
+.empty{text-align:center;color:var(--mu);padding:48px 12px}
+.empty button{margin:16px auto 0}
+#modal{position:fixed;inset:0;background:#000a;display:none;align-items:flex-end;justify-content:center;z-index:9}
+#mbox{background:var(--s1);border-radius:24px 24px 0 0;padding:22px 18px calc(18px + env(safe-area-inset-bottom));width:100%;max-width:520px;display:flex;flex-direction:column;gap:12px;max-height:88dvh;overflow:auto;position:relative}
+#mbox::before{content:"";position:absolute;top:8px;left:50%;width:38px;height:4px;margin-left:-19px;border-radius:2px;background:var(--bd)}
+.plist{max-height:46dvh;overflow:auto}
+.stars{display:flex;gap:8px;margin-top:6px}
+.stars button{flex:1;font-size:26px;padding:0}
+#toast{position:fixed;left:50%;bottom:calc(100px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--tx);color:var(--bg);padding:10px 18px;border-radius:22px;font-weight:600;font-size:14px;display:none;z-index:20;white-space:nowrap}
+h2{margin:0 0 4px;font-size:19px;font-weight:700}
+p.s{color:var(--mu);font-size:14px;margin:2px 0 10px}
+label{font-size:14px;color:var(--mu);display:flex;flex-direction:column;gap:6px}
+</style>
+</head>
+<body>
+<div id="top"></div>
+<div id="area">
+  <div id="stage"><div id="zoom"><img id="ph" alt=""><svg id="ov"></svg></div></div>
+  <button id="zr">Reimposta zoom</button>
+  <div id="panel"></div>
+</div>
+<div id="bar"></div>
+<nav id="nav"></nav>
+<div id="modal"><div id="mbox"></div></div>
+<div id="toast"></div>
+<input type="file" id="fphoto" accept="image/*" hidden>
+<input type="file" id="fimport" accept=".json,application/json" hidden>
+
+<script>
+const GR=['4','5','5+','6A','6A+','6B','6B+','6C','6C+','7A','7A+','7B','7B+','7C','7C+','8A'];
+const T={s:{c:'#2ee59d',l:'Start'},h:{c:'#3aa0ff',l:'Prese'},f:{c:'#ffb020',l:'Piedi'},t:{c:'#ff4d6d',l:'Top'}};
+const ORDER=['s','h','f','t'];
+const IC={board:'<rect x="4" y="3" width="16" height="18" rx="3"/><circle cx="9" cy="9" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="10" cy="16" r="1.5"/>',grid:'<rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/>',plus:'<path d="M12 5v14M5 12h14"/>',bookmark:'<path d="M6 4h12v17l-6-4-6 4z"/>',sliders:'<path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/>',edit:'<path d="M4 20h4L19 9l-4-4L4 16z"/>',check:'<path d="M5 12l5 5 9-10"/>',undo:'<path d="M9 14L4 9l5-5M4 9h10a6 6 0 010 12h-3"/>',trash:'<path d="M5 7h14M10 7V4h4v3M7 7l1 13h8l1-13"/>',back:'<path d="M15 5l-7 7 7 7"/>',x:'<path d="M6 6l12 12M18 6L6 18"/>'};
+const ic=(n,s=24,f='none')=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="${f}" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${IC[n]}</svg>`;
+const gcol=g=>{const i=GR.indexOf(g);return i<3?'#34d399':i<7?'#60a5fa':i<10?'#fbbf24':'#fb7185'};
+let D={panels:[],lists:[],cur:null},pending=null;
+let idx=0,view='view',edit=null,tool='h',filter='all',hist=[],openList=null,Z={k:1,x:0,y:0};
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const EMPTY={photo:null,ar:1,problems:[]};
+const PN=()=>D.panels.find(p=>p.id===D.cur)||D.panels[0]||EMPTY;
+const cur=()=>PN().problems[idx];
+const closeM=()=>{$('modal').style.display='none'};
+
+/* ---------- Salvataggio locale ---------- */
+function idb(){return new Promise((res,rej)=>{const r=indexedDB.open('pannello',1);r.onupgradeneeded=()=>r.result.createObjectStore('kv');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})}
+async function load(){try{const db=await idb();return await new Promise(r=>{const q=db.transaction('kv').objectStore('kv').get('d');q.onsuccess=()=>r(q.result);q.onerror=()=>r()})}catch(e){}}
+async function save(){try{const db=await idb();db.transaction('kv','readwrite').objectStore('kv').put(D,'d')}catch(e){toast('Salvataggio non riuscito')}}
+function mig(d){
+  if(!d.panels){
+    if(!d.photo)return{panels:[],lists:[],cur:null};
+    const p={id:Date.now(),name:'Pannello 1',photo:d.photo,ar:d.ar||1,problems:d.problems||[]};
+    return{panels:[p],lists:[],cur:p.id};
+  }
+  d.lists=d.lists||[];return d;
+}
+function toast(m){const t=$('toast');t.textContent=m;t.style.display='block';clearTimeout(toast.h);toast.h=setTimeout(()=>t.style.display='none',1800)}
+
+/* ---------- Stage, zoom, cerchi ---------- */
+function clampZ(){const s=$('stage'),w=s.offsetWidth,h=s.offsetHeight;Z.k=Math.min(6,Math.max(1,Z.k));Z.x=Math.min(0,Math.max(w*(1-Z.k),Z.x));Z.y=Math.min(0,Math.max(h*(1-Z.k),Z.y))}
+function applyZ(){clampZ();$('zoom').style.transform=`translate(${Z.x}px,${Z.y}px) scale(${Z.k})`;$('zr').style.display=Z.k>1.02?'flex':'none'}
+function zreset(){Z={k:1,x:0,y:0};applyZ()}
+function fit(){
+  const a=$('area'),s=$('stage'),pn=PN();
+  if(!pn.photo){s.style.display='none';return}
+  s.style.display='block';
+  let w=a.clientWidth,h=w/pn.ar;
+  if(h>a.clientHeight){h=a.clientHeight;w=h*pn.ar}
+  s.style.width=w+'px';s.style.height=h+'px';applyZ();
+}
+function draw(holds){
+  const W=1000,H=1000/PN().ar,r=26,o=$('ov');
+  o.setAttribute('viewBox',`0 0 ${W} ${H}`);
+  o.innerHTML=(holds||[]).map(p=>{
+    const c=T[p.t].c,x=p.x*W,y=p.y*H,rr=p.t==='f'?r*.7:r;
+    return `<circle cx="${x}" cy="${y}" r="${rr+2}" fill="none" stroke="#000" stroke-opacity=".55" stroke-width="9"/><circle cx="${x}" cy="${y}" r="${rr}" fill="${c}" fill-opacity=".14" stroke="${c}" stroke-width="6"/>`;
+  }).join('');
+}
+
+/* ---------- Liste ---------- */
+const lres=l=>l.items.map(it=>{const pn=D.panels.find(x=>x.id===it.p);if(!pn)return null;const i=pn.problems.findIndex(b=>b.id===it.b);return i<0?null:{pn,bl:pn.problems[i],i}}).filter(Boolean);
+const has=(l,pid,bid)=>l.items.some(x=>x.p===pid&&x.b===bid);
+const inAny=(pid,bid)=>D.lists.some(l=>has(l,pid,bid));
+function newList(){const n=prompt('Nome della lista (es. Progetti, Da provare)');if(n&&n.trim()){const l={id:Date.now(),name:n.trim(),items:[]};D.lists.push(l);save();return l}}
+function listSheet(){
+  const pn=PN(),p=cur(),m=$('modal'),b=$('mbox');m.style.display='flex';
+  b.innerHTML=`<h2>Salva in lista</h2>${D.lists.length?`<div class="plist">${D.lists.map(l=>{const on=has(l,pn.id,p.id);return `<div class="item" data-id="${l.id}"><span class="nm">${esc(l.name)}<small>${lres(l).length} blocchi</small></span><span class="${on?'ok':'mu'}">${on?'✓ Salvato':'Aggiungi'}</span></div>`}).join('')}</div>`:'<p class="s">Non hai ancora nessuna lista.</p>'}<button id="nl2">＋ Nuova lista</button><button class="pri" id="dn">Fatto</button>`;
+  b.querySelectorAll('.item').forEach(e=>e.onclick=()=>{
+    const l=D.lists.find(x=>x.id===+e.dataset.id);
+    if(has(l,pn.id,p.id))l.items=l.items.filter(x=>!(x.p===pn.id&&x.b===p.id));else l.items.push({p:pn.id,b:p.id});
+    save();listSheet();render();
+  });
+  $('nl2').onclick=()=>{const l=newList();if(l){l.items.push({p:pn.id,b:p.id});save();listSheet();render()}};
+  $('dn').onclick=closeM;
+}
+
+/* ---------- Render ---------- */
+const NAV=[['view','board','Blocchi'],['list','grid','Elenco'],['new','plus','Nuovo'],['lists','bookmark','Liste'],['set','sliders','Altro']];
+$('nav').innerHTML=NAV.map(([v,i,l])=>`<button data-v="${v}">${ic(i)}<span>${l}</span></button>`).join('');
+function setNav(){const a=view==='edit'?'new':view==='listd'?'lists':view;document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('a',b.dataset.v===a))}
+const pillHTML=()=>D.panels.length?`<button class="pill" id="pp"><span>${esc(PN().name)}</span> ▾</button>`:'<div class="h1">Il mio pannello</div>';
+const bindPill=()=>{const b=$('pp');if(b)b.onclick=panelSheet};
+function render(){
+  setNav();
+  const pn=PN(),ph=$('ph');
+  $('panel').style.display='none';
+  if(ph._p!==pn.photo){ph.src=pn.photo||'';ph._p=pn.photo}
+  ({edit:rEdit,list:rList,lists:rLists,listd:rListD,set:rSet}[view]||rView)();
+  $('bar').style.display=$('bar').innerHTML.trim()?'':'none';
+  fit();requestAnimationFrame(fit);
+}
+function rView(){
+  const pn=PN(),p=cur(),n=pn.problems.length,P=$('panel'),top=$('top'),bar=$('bar');
+  if(!pn.photo){
+    top.innerHTML='<div class="h1">Il mio pannello</div>';bar.innerHTML='';
+    P.style.display='block';
+    P.innerHTML=`<div class="empty"><h2 style="color:var(--tx)">Crea il primo pannello</h2><p class="s">Scegli un nome e una foto frontale del pannello. Ogni pannello conserva la sua foto e i suoi blocchi.</p><button class="pri" id="bp">Nuovo pannello</button></div>`;
+    $('bp').onclick=newPanelSheet;return;
+  }
+  if(!p){
+    draw([]);top.innerHTML=`${pillHTML()}<span class="c">0 blocchi</span>`;bindPill();
+    bar.innerHTML='<div class="hint">Nessun blocco su questo pannello.</div><div class="row"><button class="pri" id="bn">Traccia il primo blocco</button></div>';
+    $('bn').onclick=newProblem;return;
+  }
+  draw(p.holds);pn.last=idx;
+  top.innerHTML=`${pillHTML()}<span class="c">${idx+1} / ${n}</span>`;bindPill();
+  const s=p.send,saved=inAny(pn.id,p.id);
+  bar.innerHTML=`<div class="ttl"><div class="nm">${esc(p.name||'Senza nome')}<span class="sub">${s?`<span class="ok">✓ Salito</span> · ${new Date(s.d).toLocaleDateString('it-IT')} · ${s.a} tent. · voto ${s.g} · ${'★'.repeat(s.s)||'–'}`:`Da fare · ${p.holds.length} prese`}</span></div><span class="gb" style="color:${gcol(p.grade)}">${p.grade}</span></div>
+  <div class="row"><button class="ib ${saved?'gold':''}" id="bl" aria-label="Salva in lista">${ic('bookmark',22,saved?'currentColor':'none')}</button><button class="ib" id="be" aria-label="Modifica">${ic('edit',22)}</button><button id="bk" class="${s?'':'pri'}">${s?'Modifica salita':'Segna come salito'}</button></div>`;
+  $('bl').onclick=listSheet;
+  $('be').onclick=()=>{edit=JSON.parse(JSON.stringify(p));hist=[];zreset();view='edit';render()};
+  $('bk').onclick=sendDialog;
+}
+function rEdit(){
+  const pn=PN(),top=$('top'),bar=$('bar');
+  draw(edit.holds);
+  top.innerHTML=`<input id="en" placeholder="Nome del blocco" value="${esc(edit.name)}" style="font-weight:700"><select id="eg" style="width:92px;flex:none;font-weight:700">${GR.map(g=>`<option ${g===edit.grade?'selected':''}>${g}</option>`).join('')}</select>`;
+  bar.innerHTML=`<div class="tools">${ORDER.map(k=>`<button data-t="${k}" class="${tool===k?'on':''}"><span class="dot" style="color:${T[k].c};border-color:${T[k].c}"></span>${T[k].l}</button>`).join('')}</div>
+  <div class="hint">${esc(pn.name)} · pizzica per zoomare · tocca una presa dello stesso tipo per toglierla</div>
+  <div class="row"><button class="ib" id="bu" aria-label="Annulla ultima modifica">${ic('undo',22)}</button>${edit.id?`<button class="ib red" id="bd" aria-label="Elimina">${ic('trash',22)}</button>`:''}<button id="bc">Esci</button><button id="bs" class="pri">Salva</button></div>`;
+  $('en').oninput=e=>edit.name=e.target.value;
+  $('eg').onchange=e=>edit.grade=e.target.value;
+  bar.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{tool=b.dataset.t;render()});
+  $('bu').onclick=()=>{if(hist.length){edit.holds=JSON.parse(hist.pop());draw(edit.holds)}};
+  $('bc').onclick=()=>{edit=null;zreset();view='view';render()};
+  $('bs').onclick=saveEdit;
+  if($('bd'))$('bd').onclick=()=>{if(confirm('Eliminare questo blocco?')){pn.problems.splice(idx,1);idx=Math.max(0,idx-1);save();edit=null;zreset();view='view';render()}};
+}
+function rList(){
+  const P=$('panel'),pn=PN();P.style.display='block';
+  $('top').innerHTML=`${pillHTML()}<span class="c">${pn.problems.filter(p=>p.send).length}/${pn.problems.length} saliti</span>`;bindPill();$('bar').innerHTML='';
+  let L=pn.problems.map((p,i)=>({p,i})).filter(o=>filter==='all'||(filter==='todo'?!o.p.send:!!o.p.send));
+  L.sort((a,b)=>GR.indexOf(a.p.grade)-GR.indexOf(b.p.grade));
+  P.innerHTML=`<div class="seg">${[['all','Tutti'],['todo','Da fare'],['done','Saliti']].map(([k,l])=>`<button data-f="${k}" class="${filter===k?'on':''}">${l}</button>`).join('')}</div>`+
+  (L.length?L.map(o=>`<div class="item" data-i="${o.i}"><span class="gr" style="color:${gcol(o.p.grade)}">${o.p.grade}</span><span class="nm">${esc(o.p.name||'Senza nome')}<small>${o.p.holds.length} prese</small></span>${o.p.send?`<span class="ok">✓ ${'★'.repeat(o.p.send.s)}</span>`:''}</div>`).join(''):'<div class="empty">Nessun blocco qui.</div>');
+  P.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{filter=b.dataset.f;render()});
+  P.querySelectorAll('.item').forEach(e=>e.onclick=()=>{idx=+e.dataset.i;zreset();view='view';render()});
+}
+function rLists(){
+  const P=$('panel');P.style.display='block';
+  $('top').innerHTML=`<div class="h1">Liste</div><button class="ib" id="nl" aria-label="Nuova lista">${ic('plus',22)}</button>`;$('bar').innerHTML='';
+  P.innerHTML=D.lists.length?D.lists.map(l=>{const r=lres(l);return `<div class="item" data-id="${l.id}"><span class="ibg">${ic('bookmark',20)}</span><span class="nm">${esc(l.name)}<small>${r.length} blocchi · ${r.filter(x=>x.bl.send).length} saliti</small></span><span class="mu">›</span></div>`}).join(''):`<div class="empty"><h2 style="color:var(--tx)">Nessuna lista</h2><p class="s">Crea liste personalizzate (Progetti, Da provare, Preferiti…) e salvaci i blocchi con l'icona segnalibro.</p><button class="pri" id="nl3">＋ Nuova lista</button></div>`;
+  const mk=()=>{if(newList())render()};
+  $('nl').onclick=mk;if($('nl3'))$('nl3').onclick=mk;
+  P.querySelectorAll('.item').forEach(e=>e.onclick=()=>{openList=+e.dataset.id;view='listd';render()});
+}
+function rListD(){
+  const P=$('panel'),l=D.lists.find(x=>x.id===openList);
+  if(!l){view='lists';return render()}
+  const r=lres(l);P.style.display='block';
+  $('top').innerHTML=`<button class="ib" id="bk0" aria-label="Indietro">${ic('back',22)}</button><div class="h1" style="font-size:20px">${esc(l.name)}</div><span class="c">${r.length}</span>`;$('bar').innerHTML='';
+  P.innerHTML=(r.length?r.map(o=>`<div class="item" data-p="${o.pn.id}" data-i="${o.i}"><span class="gr" style="color:${gcol(o.bl.grade)}">${o.bl.grade}</span><span class="nm">${esc(o.bl.name||'Senza nome')}<small>${esc(o.pn.name)}</small></span>${o.bl.send?'<span class="ok">✓</span>':''}<button class="ib" data-rm="${o.pn.id}:${o.bl.id}" style="min-height:40px;width:40px;background:none;color:var(--mu)" aria-label="Rimuovi">${ic('x',18)}</button></div>`).join(''):'<div class="empty">Lista vuota. Apri un blocco e tocca il segnalibro per aggiungerlo.</div>')+
+  `<div class="row" style="margin-top:14px"><button id="lr">Rinomina</button><button id="ld" class="red">Elimina lista</button></div>`;
+  $('bk0').onclick=()=>{view='lists';render()};
+  P.querySelectorAll('.item').forEach(e=>e.onclick=ev=>{
+    const rm=ev.target.closest('[data-rm]');
+    if(rm){const[a,b]=rm.dataset.rm.split(':').map(Number);l.items=l.items.filter(x=>!(x.p===a&&x.b===b));save();render();return}
+    D.cur=+e.dataset.p;idx=+e.dataset.i;zreset();save();view='view';render();
+  });
+  $('lr').onclick=()=>{const n=prompt('Nome della lista',l.name);if(n&&n.trim()){l.name=n.trim();save();render()}};
+  $('ld').onclick=()=>{if(confirm('Eliminare la lista "'+l.name+'"? I blocchi non vengono cancellati.')){D.lists=D.lists.filter(x=>x!==l);save();view='lists';render()}};
+}
+function rSet(){
+  const P=$('panel'),pn=PN(),hp=D.panels.length>0;P.style.display='block';
+  $('top').innerHTML='<div class="h1">Altro</div>';$('bar').innerHTML='';
+  P.innerHTML=(hp?`<h2>Pannello: ${esc(pn.name)}</h2><p class="s">Quando cambi le prese sul muro, crea un nuovo pannello con la nuova foto: i blocchi vecchi restano sul vecchio pannello, con la foto di allora.</p>
+  <div class="row"><button id="o0">Rinomina</button><button id="o1">Sostituisci foto</button></div>
+  <div class="row" style="margin-top:10px"><button id="o5" class="red">Elimina pannello</button></div>`:'')+
+  `<div class="row" style="margin-top:14px"><button id="o6" class="pri">＋ Nuovo pannello</button></div>
+  <h2 style="margin-top:28px">Backup</h2><p class="s">Tutto è salvato solo su questo telefono. Esporta un file e conservalo in File o iCloud.</p>
+  <div class="row"><button id="o2">Esporta</button><button id="o3">Importa</button></div>
+  <h2 style="margin-top:28px">Azzera</h2><p class="s">Cancella tutti i pannelli, i blocchi, le liste e le salite.</p><button id="o4" class="red" style="width:100%">Cancella tutto</button>`;
+  if(hp){
+    $('o0').onclick=()=>{const n=prompt('Nome del pannello',pn.name);if(n&&n.trim()){pn.name=n.trim();save();render()}};
+    $('o1').onclick=()=>{if(confirm('Sostituire la foto? I blocchi restano nelle stesse posizioni sulla nuova foto: fallo solo se l\'inquadratura è identica. Se le prese sul muro sono cambiate, crea invece un nuovo pannello.')){pending={mode:'replace'};$('fphoto').click()}};
+    $('o5').onclick=()=>{if(confirm('Eliminare il pannello "'+pn.name+'" con tutti i suoi blocchi?')){D.panels=D.panels.filter(p=>p!==pn);D.cur=D.panels[0]?D.panels[0].id:null;idx=0;save();view='view';render()}};
+  }
+  $('o6').onclick=newPanelSheet;$('o2').onclick=exportData;$('o3').onclick=()=>$('fimport').click();
+  $('o4').onclick=()=>{if(confirm('Cancellare tutto? Non si può annullare.')){D={panels:[],lists:[],cur:null};idx=0;save();view='view';render()}};
+}
+function panelSheet(){
+  const m=$('modal'),b=$('mbox');m.style.display='flex';
+  b.innerHTML=`<h2>Pannelli</h2><div class="plist">${D.panels.map(p=>`<div class="item" data-id="${p.id}"><img class="th" src="${p.photo}" alt=""><span class="nm">${esc(p.name)}<small>${p.problems.length} blocchi · ${p.problems.filter(x=>x.send).length} saliti</small></span>${p.id===PN().id?'<span class="ok">●</span>':''}</div>`).join('')}</div><button class="pri" id="pn">＋ Nuovo pannello</button>`;
+  b.querySelectorAll('.item').forEach(e=>e.onclick=()=>{D.cur=+e.dataset.id;const p=PN();idx=Math.min(p.last||0,Math.max(0,p.problems.length-1));save();closeM();zreset();render()});
+  $('pn').onclick=newPanelSheet;
+}
+function newPanelSheet(){
+  const m=$('modal'),b=$('mbox');m.style.display='flex';
+  b.innerHTML=`<h2>Nuovo pannello</h2><p class="s">Crea un nuovo pannello ogni volta che cambi le prese sul muro. Ogni pannello tiene la sua foto fissa e i suoi blocchi.</p>
+  <input id="npn" placeholder="Nome (es. Novembre 2026)" value="Pannello ${D.panels.length+1}">
+  <div class="row"><button id="npc">Annulla</button><button class="pri" id="npf">Scegli la foto</button></div>`;
+  $('npc').onclick=closeM;
+  $('npf').onclick=()=>{pending={mode:'new',name:$('npn').value.trim()||'Pannello'};$('fphoto').click()};
+}
+
+/* ---------- Creazione / modifica ---------- */
+function newProblem(){
+  if(!PN().photo){view='view';render();return}
+  edit={id:null,name:'',grade:'6A',holds:[],send:null};tool='s';hist=[];zreset();view='edit';render();
+}
+function saveEdit(){
+  const pn=PN();
+  if(!edit.holds.length){toast('Aggiungi almeno una presa');return}
+  if(!edit.holds.some(h=>h.t==='s')&&!confirm('Manca la presa di start. Salvare lo stesso?'))return;
+  if(!edit.name.trim())edit.name='Blocco '+(pn.problems.length+1);
+  if(edit.id){pn.problems[idx]=edit}
+  else{edit.id=Date.now();pn.problems.push(edit);idx=pn.problems.length-1}
+  save();edit=null;zreset();view='view';render();toast('Blocco salvato');
+}
+function stageTap(x,y){
+  const s=$('zoom').getBoundingClientRect();
+  const nx=(x-s.left)/s.width,ny=(y-s.top)/s.height;
+  if(nx<0||nx>1||ny<0||ny>1)return;
+  const k=edit.holds.findIndex(h=>Math.hypot(h.x-nx,(h.y-ny)*(s.height/s.width))<.032);
+  hist.push(JSON.stringify(edit.holds));if(hist.length>60)hist.shift();
+  if(k>=0){if(edit.holds[k].t===tool)edit.holds.splice(k,1);else edit.holds[k].t=tool}
+  else edit.holds.push({x:nx,y:ny,t:tool});
+  draw(edit.holds);
+}
+
+/* ---------- Salita ---------- */
+function sendDialog(){
+  const p=cur(),s=p.send?{...p.send}:{a:1,g:p.grade,s:2};
+  let st=s.s;
+  const m=$('modal'),b=$('mbox');m.style.display='flex';
+  const paint=()=>{
+    b.innerHTML=`<h2>${esc(p.name)} · ${p.grade}</h2>
+    <label>Tentativi<input id="ma" type="number" inputmode="numeric" min="1" value="${s.a}"></label>
+    <label>Il tuo voto di difficoltà<select id="mg">${GR.map(g=>`<option ${g===s.g?'selected':''}>${g}</option>`).join('')}</select></label>
+    <label>Bellezza del blocco<div class="stars">${[1,2,3].map(n=>`<button data-s="${n}" class="${n<=st?'on':''}">${n<=st?'★':'☆'}</button>`).join('')}</div></label>
+    <div class="row"><button id="mc">Annulla</button>${p.send?'<button id="mr" class="red">Rimuovi</button>':''}<button id="ms" class="pri">Salva</button></div>`;
+    b.querySelectorAll('[data-s]').forEach(x=>x.onclick=()=>{s.a=+$('ma').value||1;s.g=$('mg').value;st=+x.dataset.s===st?0:+x.dataset.s;paint()});
+    $('mc').onclick=closeM;
+    if($('mr'))$('mr').onclick=()=>{p.send=null;save();closeM();render()};
+    $('ms').onclick=()=>{p.send={d:p.send?p.send.d:Date.now(),a:Math.max(1,+$('ma').value||1),g:$('mg').value,s:st};save();closeM();render();toast('Salita registrata')};
+  };paint();
+}
+
+/* ---------- Foto, backup ---------- */
+$('fphoto').onchange=e=>{
+  const f=e.target.files[0];if(!f||!pending){e.target.value='';return}
+  const img=new Image,u=URL.createObjectURL(f);
+  img.onload=()=>{
+    const M=1800,k=Math.min(1,M/Math.max(img.width,img.height));
+    const c=document.createElement('canvas');c.width=Math.round(img.width*k);c.height=Math.round(img.height*k);
+    c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+    const photo=c.toDataURL('image/jpeg',.85),ar=c.width/c.height;
+    if(pending.mode==='new'){const p={id:Date.now(),name:pending.name,photo,ar,problems:[]};D.panels.push(p);D.cur=p.id;idx=0;toast('Pannello creato')}
+    else{const p=PN();p.photo=photo;p.ar=ar;toast('Foto sostituita')}
+    pending=null;closeM();URL.revokeObjectURL(u);save();zreset();view='view';render();
+  };
+  img.onerror=()=>toast('Foto non leggibile');
+  img.src=u;e.target.value='';
+};
+async function exportData(){
+  const f=new File([JSON.stringify(D)],'pannelli-backup.json',{type:'application/json'});
+  try{if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f]});return}}catch(e){if(e.name==='AbortError')return}
+  const a=document.createElement('a');a.href=URL.createObjectURL(f);a.download=f.name;a.click();
+}
+$('fimport').onchange=e=>{
+  const f=e.target.files[0];if(!f)return;
+  const r=new FileReader;
+  r.onload=()=>{try{const d=mig(JSON.parse(r.result));if(!Array.isArray(d.panels))throw 0;D=d;D.cur=D.panels[0]?D.panels[0].id:null;idx=0;save();view='view';render();toast('Backup importato')}catch(x){toast('File non valido')}};
+  r.readAsText(f);e.target.value='';
+};
+
+/* ---------- Gesti: pizzico, trascinamento, swipe, tocco ---------- */
+const ptr=new Map();let G=null;const A=$('area');
+const mid=()=>{const v=[...ptr.values()];return{x:(v[0].x+v[1].x)/2,y:(v[0].y+v[1].y)/2,d:Math.hypot(v[0].x-v[1].x,v[0].y-v[1].y)||1}};
+A.addEventListener('pointerdown',e=>{
+  if($('panel').style.display==='block'||e.target.id==='zr')return;
+  if(e.isPrimary){ptr.clear();G=null}
+  ptr.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  const r=$('stage').getBoundingClientRect();
+  if(ptr.size===2){const m=mid();G={m:'p',d:m.d,k:Z.k,fx:(m.x-r.left-Z.x)/Z.k,fy:(m.y-r.top-Z.y)/Z.k}}
+  else if(ptr.size===1)G={m:'o',sx:e.clientX,sy:e.clientY,x:Z.x,y:Z.y,moved:false};
+  else G=null;
+});
+A.addEventListener('pointermove',e=>{
+  if(!ptr.has(e.pointerId)||!G)return;
+  ptr.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  const r=$('stage').getBoundingClientRect();
+  if(G.m==='p'&&ptr.size===2){
+    const m=mid();Z.k=Math.min(6,Math.max(1,G.k*m.d/G.d));
+    Z.x=m.x-r.left-G.fx*Z.k;Z.y=m.y-r.top-G.fy*Z.k;applyZ();
+  }else if(G.m==='o'){
+    const dx=e.clientX-G.sx,dy=e.clientY-G.sy;
+    if(Math.hypot(dx,dy)>8)G.moved=true;
+    if(Z.k>1.02&&G.moved){Z.x=G.x+dx;Z.y=G.y+dy;applyZ()}
+  }
+});
+function pend(e){
+  if(!ptr.has(e.pointerId))return;
+  ptr.delete(e.pointerId);const g=G;
+  if(ptr.size>0){if(g&&g.m==='p'){const v=[...ptr.values()][0];G={m:'o',sx:v.x,sy:v.y,x:Z.x,y:Z.y,moved:true}}return}
+  G=null;if(Z.k<1.05)zreset();
+  if(!g||g.m!=='o'||e.type==='pointercancel')return;
+  const dx=e.clientX-g.sx,dy=e.clientY-g.sy;
+  if(view==='edit'){if(!g.moved)stageTap(e.clientX,e.clientY);return}
+  if(view==='view'&&Z.k<=1.02&&Math.abs(dx)>50&&Math.abs(dx)>Math.abs(dy)*1.5)go(dx<0?1:-1);
+}
+A.addEventListener('pointerup',pend);A.addEventListener('pointercancel',pend);
+$('zr').onclick=zreset;
+document.addEventListener('gesturestart',e=>e.preventDefault());
+function go(d){
+  const n=PN().problems.length;if(n<2)return;
+  idx=(idx+d+n)%n;zreset();render();
+  $('stage').animate([{transform:`translateX(${d*50}px)`,opacity:.2},{transform:'none',opacity:1}],{duration:220,easing:'ease-out'});
+}
+document.addEventListener('keydown',e=>{if(view==='view'){if(e.key==='ArrowRight')go(1);if(e.key==='ArrowLeft')go(-1)}});
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{
+  if(view==='edit'&&!confirm('Uscire senza salvare il blocco?'))return;
+  edit=null;zreset();const v=b.dataset.v;
+  if(v==='new'){newProblem();return}
+  view=v;render();
+});
+$('modal').onclick=e=>{if(e.target.id==='modal')closeM()};
+window.addEventListener('resize',fit);
+if(window.ResizeObserver)new ResizeObserver(fit).observe($('area'));
+const stopG=()=>{ptr.clear();G=null};
+window.addEventListener('blur',stopG);
+document.addEventListener('visibilitychange',stopG);
+$('ph').onload=fit;
+
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{});
+(async()=>{
+  const d=await load();if(d)D=mig(d);
+  if(!D.panels.some(p=>p.id===D.cur))D.cur=D.panels[0]?D.panels[0].id:null;
+  const p=PN();idx=Math.min(p.last||0,Math.max(0,p.problems.length-1));render();
+})();
+</script>
+</body>
+</html>
