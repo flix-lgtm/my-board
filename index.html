@@ -30,11 +30,12 @@ input,select{font:inherit;color:inherit;background:var(--s2);border:0;border-rad
 .pill{max-width:72%;border-radius:999px;min-height:40px;padding:0 16px;font-size:15px}
 .pill span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .c{color:var(--mu);font-size:14px;white-space:nowrap;font-variant-numeric:tabular-nums}
-#area{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;position:relative;touch-action:none}
+#area{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;position:relative;touch-action:none;overflow:hidden}
 #stage{position:relative;overflow:hidden;background:#000;border-radius:10px}
 #zoom{position:absolute;inset:0;transform-origin:0 0;will-change:transform}
 #zoom img,#zoom svg{position:absolute;inset:0;width:100%;height:100%;display:block;pointer-events:none}
 #zr{position:absolute;top:10px;right:18px;min-height:36px;padding:0 14px;font-size:13px;background:#000b;display:none;z-index:3}
+#bar,nav{position:relative;z-index:2}
 #bar{padding:14px 16px 10px;display:flex;flex-direction:column;gap:10px;background:var(--s1);border-radius:22px 22px 0 0}
 .row{display:flex;gap:10px;align-items:center}
 .row>button:not(.ib){flex:1}
@@ -167,9 +168,9 @@ function render(){
   const pn=PN(),ph=$('ph');
   $('panel').style.display='none';
   if(ph._p!==pn.photo){ph.src=pn.photo||'';ph._p=pn.photo}
-  fit();
   ({edit:rEdit,list:rList,lists:rLists,listd:rListD,set:rSet}[view]||rView)();
   $('bar').style.display=$('bar').innerHTML.trim()?'':'none';
+  fit();requestAnimationFrame(fit);
 }
 function rView(){
   const pn=PN(),p=cur(),n=pn.problems.length,P=$('panel'),top=$('top'),bar=$('bar');
@@ -351,6 +352,7 @@ const ptr=new Map();let G=null;const A=$('area');
 const mid=()=>{const v=[...ptr.values()];return{x:(v[0].x+v[1].x)/2,y:(v[0].y+v[1].y)/2,d:Math.hypot(v[0].x-v[1].x,v[0].y-v[1].y)||1}};
 A.addEventListener('pointerdown',e=>{
   if($('panel').style.display==='block'||e.target.id==='zr')return;
+  if(e.isPrimary){ptr.clear();G=null}
   ptr.set(e.pointerId,{x:e.clientX,y:e.clientY});
   const r=$('stage').getBoundingClientRect();
   if(ptr.size===2){const m=mid();G={m:'p',d:m.d,k:Z.k,fx:(m.x-r.left-Z.x)/Z.k,fy:(m.y-r.top-Z.y)/Z.k}}
@@ -397,6 +399,10 @@ document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{
 });
 $('modal').onclick=e=>{if(e.target.id==='modal')closeM()};
 window.addEventListener('resize',fit);
+if(window.ResizeObserver)new ResizeObserver(fit).observe($('area'));
+const stopG=()=>{ptr.clear();G=null};
+window.addEventListener('blur',stopG);
+document.addEventListener('visibilitychange',stopG);
 $('ph').onload=fit;
 
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
