@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#16171a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Pannello">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="manifest" href="manifest.webmanifest">
+<title>Il mio pannello</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;margin:0}
+body{background:#16171a;color:#f1ede4;font:16px/1.35 "Avenir Next","Trebuchet MS",system-ui,sans-serif;display:flex;flex-direction:column;height:100dvh;overflow:hidden;padding-top:env(safe-area-inset-top)}
+button,select,input{font:inherit;color:inherit}
+button{background:#26282d;border:1px solid #3a3d44;border-radius:10px;padding:10px 14px;cursor:pointer}
+button:active{transform:scale(.97)}
+button.pri{background:#f1ede4;color:#16171a;border-color:#f1ede4;font-weight:700}
+button.red{color:#ff6b81;border-color:#5a2a33}
+button.on{outline:2px solid #f1ede4}
+input,select{background:#26282d;border:1px solid #3a3d44;border-radius:10px;padding:10px;min-width:0}
+#top{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;min-height:56px}
+#top .t{font-size:20px;font-weight:700;letter-spacing:.2px}
+#top .g{font-size:22px;font-weight:800;margin-left:8px;color:#ffd36b}
+#top .c{color:#9a9ca3;font-size:14px;white-space:nowrap}
+#area{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;position:relative}
+#stage{position:relative;touch-action:pan-y;user-select:none;-webkit-user-select:none;border-radius:6px;overflow:hidden;background:#000}
+#stage img{width:100%;height:100%;display:block;pointer-events:none}
+#stage svg{position:absolute;inset:0;width:100%;height:100%}
+#bar{padding:8px 14px;display:flex;flex-direction:column;gap:8px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.row>*{flex:1}
+.info{color:#b9b6ad;font-size:14px;min-height:20px;text-align:center}
+.leg{display:flex;justify-content:center;gap:14px;font-size:13px;color:#b9b6ad}
+.dot{display:inline-block;width:12px;height:12px;border-radius:50%;border:2px solid;vertical-align:-1px;margin-right:4px}
+nav{display:flex;border-top:1px solid #2c2e34;padding-bottom:env(safe-area-inset-bottom)}
+nav button{flex:1;border:0;border-radius:0;background:none;padding:12px 4px;font-size:13px;color:#9a9ca3}
+nav button.a{color:#f1ede4;font-weight:700}
+nav button b{display:block;font-size:20px;line-height:1.1}
+#panel{position:absolute;inset:0;background:#16171a;overflow:auto;padding:14px;display:none;z-index:5}
+.chips{display:flex;gap:8px;margin:10px 0}
+.chips button{flex:1;padding:8px 4px;font-size:14px}
+.item{display:flex;align-items:center;gap:12px;padding:12px;border:1px solid #2c2e34;border-radius:12px;margin-bottom:8px;cursor:pointer}
+.item .gr{font-weight:800;font-size:20px;color:#ffd36b;min-width:44px}
+.item .nm{flex:1}
+.item small{display:block;color:#9a9ca3}
+.ok{color:#2ee59d;font-weight:700}
+.empty{text-align:center;color:#9a9ca3;padding:40px 20px}
+#modal{position:fixed;inset:0;background:#000a;display:none;align-items:flex-end;justify-content:center;z-index:9}
+#modal .box{background:#1e2024;border-radius:18px 18px 0 0;padding:18px;width:100%;max-width:480px;display:flex;flex-direction:column;gap:12px;padding-bottom:calc(18px + env(safe-area-inset-bottom))}
+.stars{display:flex;gap:8px}
+.stars button{font-size:24px;padding:6px;flex:1}
+#toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#f1ede4;color:#16171a;padding:10px 16px;border-radius:20px;font-weight:600;display:none;z-index:20}
+h2{margin:0 0 6px;font-size:18px}
+p.s{color:#9a9ca3;font-size:14px;margin:4px 0 12px}
+</style>
+</head>
+<body>
+<div id="top"></div>
+<div id="area">
+  <div id="stage"><img id="ph" alt=""><svg id="ov"></svg></div>
+  <div id="panel"></div>
+</div>
+<div id="bar"></div>
+<nav>
+  <button data-v="view"><b>◉</b>Blocchi</button>
+  <button data-v="list"><b>≡</b>Lista</button>
+  <button data-v="new"><b>＋</b>Nuovo</button>
+  <button data-v="set"><b>⚙</b>Opzioni</button>
+</nav>
+<div id="modal"><div class="box" id="mbox"></div></div>
+<div id="toast"></div>
+<input type="file" id="fphoto" accept="image/*" hidden>
+<input type="file" id="fimport" accept=".json,application/json" hidden>
+
+<script>
+const GR=['4','5','5+','6A','6A+','6B','6B+','6C','6C+','7A','7A+','7B','7B+','7C','7C+','8A'];
+const T={s:{c:'#2ee59d',l:'Start'},h:{c:'#3aa0ff',l:'Prese'},f:{c:'#ffb020',l:'Piedi'},t:{c:'#ff4d6d',l:'Top'}};
+const ORDER=['s','h','f','t'];
+let D={photo:null,ar:1,problems:[]};
+let idx=0,view='view',edit=null,tool='h',filter='all';
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* ---------- Salvataggio locale (IndexedDB, nessuna rete) ---------- */
+function idb(){return new Promise((res,rej)=>{const r=indexedDB.open('pannello',1);r.onupgradeneeded=()=>r.result.createObjectStore('kv');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})}
+async function load(){try{const db=await idb();return await new Promise(r=>{const q=db.transaction('kv').objectStore('kv').get('d');q.onsuccess=()=>r(q.result);q.onerror=()=>r()})}catch(e){}}
+async function save(){try{const db=await idb();db.transaction('kv','readwrite').objectStore('kv').put(D,'d')}catch(e){toast('Salvataggio non riuscito')}}
+function toast(m){const t=$('toast');t.textContent=m;t.style.display='block';clearTimeout(toast.h);toast.h=setTimeout(()=>t.style.display='none',1800)}
+
+/* ---------- Stage: foto + cerchi ---------- */
+function fit(){
+  const a=$('area'),s=$('stage');
+  if(!D.photo){s.style.display='none';return}
+  s.style.display='block';
+  let w=a.clientWidth,h=w/D.ar;
+  if(h>a.clientHeight){h=a.clientHeight;w=h*D.ar}
+  s.style.width=w+'px';s.style.height=h+'px';
+}
+function draw(holds){
+  const W=1000,H=1000/D.ar,r=26;
+  const o=$('ov');o.setAttribute('viewBox',`0 0 ${W} ${H}`);
+  o.innerHTML=(holds||[]).map(p=>{
+    const c=T[p.t].c,x=p.x*W,y=p.y*H,rr=p.t==='f'?r*.7:r;
+    return `<circle cx="${x}" cy="${y}" r="${rr+2}" fill="none" stroke="#000" stroke-opacity=".55" stroke-width="9"/>`+
+           `<circle cx="${x}" cy="${y}" r="${rr}" fill="${c}" fill-opacity=".14" stroke="${c}" stroke-width="6"/>`;
+  }).join('');
+}
+function cur(){return D.problems[idx]}
+
+/* ---------- Render ---------- */
+function setNav(){document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('a',b.dataset.v===(view==='edit'?'new':view)))}
+function render(){
+  setNav();
+  const P=$('panel'),top=$('top'),bar=$('bar');
+  P.style.display='none';
+  $('ph').src=D.photo||'';
+  fit();
+  if(view==='edit'){
+    draw(edit.holds);
+    top.innerHTML=`<input id="en" placeholder="Nome del blocco" value="${esc(edit.name)}" style="flex:1;font-weight:700"><select id="eg">${GR.map(g=>`<option ${g===edit.grade?'selected':''}>${g}</option>`).join('')}</select>`;
+    bar.innerHTML=`<div class="row">${ORDER.map(k=>`<button data-t="${k}" class="${tool===k?'on':''}"><span class="dot" style="color:${T[k].c};border-color:${T[k].c}"></span>${T[k].l}</button>`).join('')}</div>
+    <div class="info">Tocca la foto per aggiungere una presa. Tocca una presa esistente per cambiarne il tipo (e poi toglierla).</div>
+    <div class="row"><button id="bc">Annulla</button>${edit.id?'<button id="bd" class="red">Elimina</button>':''}<button id="bs" class="pri">Salva</button></div>`;
+    $('en').oninput=e=>edit.name=e.target.value;
+    $('eg').onchange=e=>edit.grade=e.target.value;
+    bar.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{tool=b.dataset.t;render()});
+    $('bc').onclick=()=>{edit=null;view='view';render()};
+    $('bs').onclick=saveEdit;
+    if($('bd'))$('bd').onclick=()=>{if(confirm('Eliminare questo blocco?')){D.problems.splice(idx,1);idx=Math.max(0,idx-1);save();edit=null;view='view';render()}};
+    return;
+  }
+  if(view==='list')return renderList();
+  if(view==='set')return renderSet();
+  /* view */
+  const p=cur();
+  if(!D.photo){
+    top.innerHTML='<div class="t">Il mio pannello</div>';
+    bar.innerHTML='';
+    P.style.display='block';
+    P.innerHTML=`<div class="empty"><h2>Inizia dalla foto del pannello</h2><p class="s">Scatta o scegli una foto frontale del pannello. Resta salvata sul telefono, senza internet.</p><button class="pri" id="bp">Scegli la foto</button></div>`;
+    $('bp').onclick=()=>$('fphoto').click();
+    return;
+  }
+  if(!p){
+    draw([]);
+    top.innerHTML='<div class="t">Nessun blocco</div>';
+    bar.innerHTML='<div class="info">Premi ＋ Nuovo per tracciare il primo blocco.</div>';
+    return;
+  }
+  draw(p.holds);
+  top.innerHTML=`<div><span class="t">${esc(p.name||'Senza nome')}</span><span class="g">${p.grade}</span></div><span class="c">${idx+1} / ${D.problems.length}</span>`;
+  const s=p.send;
+  bar.innerHTML=`<div class="leg">${ORDER.map(k=>`<span><span class="dot" style="color:${T[k].c};border-color:${T[k].c}"></span>${T[k].l}</span>`).join('')}</div>
+  <div class="info">${s?`<span class="ok">✓ Salito</span> il ${new Date(s.d).toLocaleDateString('it-IT')} · ${s.a} ${s.a==1?'tentativo':'tentativi'} · voto ${s.g} · ${'★'.repeat(s.s)||'senza stelle'}`:'Scorri a destra o sinistra per cambiare blocco'}</div>
+  <div class="row"><button id="be">Modifica</button><button id="bk" class="${s?'':'pri'}">${s?'Modifica salita':'Segna come salito'}</button></div>`;
+  $('be').onclick=()=>{edit=JSON.parse(JSON.stringify(p));view='edit';render()};
+  $('bk').onclick=sendDialog;
+}
+function renderList(){
+  const P=$('panel');P.style.display='block';
+  $('top').innerHTML=`<div class="t">Tutti i blocchi</div><span class="c">${D.problems.filter(p=>p.send).length} saliti su ${D.problems.length}</span>`;
+  $('bar').innerHTML='';
+  let L=D.problems.map((p,i)=>({p,i})).filter(o=>filter==='all'||(filter==='todo'?!o.p.send:!!o.p.send));
+  L.sort((a,b)=>GR.indexOf(a.p.grade)-GR.indexOf(b.p.grade));
+  P.innerHTML=`<div class="chips">${[['all','Tutti'],['todo','Da fare'],['done','Saliti']].map(([k,l])=>`<button data-f="${k}" class="${filter===k?'on':''}">${l}</button>`).join('')}</div>`+
+  (L.length?L.map(o=>`<div class="item" data-i="${o.i}"><span class="gr">${o.p.grade}</span><span class="nm">${esc(o.p.name||'Senza nome')}<small>${o.p.holds.length} prese</small></span>${o.p.send?`<span class="ok">✓ ${'★'.repeat(o.p.send.s)}</span>`:''}</div>`).join(''):'<div class="empty">Nessun blocco qui.</div>');
+  P.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{filter=b.dataset.f;render()});
+  P.querySelectorAll('.item').forEach(e=>e.onclick=()=>{idx=+e.dataset.i;view='view';render()});
+}
+function renderSet(){
+  const P=$('panel');P.style.display='block';
+  $('top').innerHTML='<div class="t">Opzioni</div>';$('bar').innerHTML='';
+  P.innerHTML=`<h2>Foto del pannello</h2><p class="s">I blocchi restano al loro posto se sostituisci la foto con una inquadratura identica.</p><button id="o1">Cambia foto</button>
+  <h2 style="margin-top:24px">Backup</h2><p class="s">Tutto è salvato solo su questo telefono. Esporta un file per non perdere i blocchi.</p>
+  <div class="row"><button id="o2">Esporta</button><button id="o3">Importa</button></div>
+  <h2 style="margin-top:24px">Azzera</h2><p class="s">Cancella foto, blocchi e salite.</p><button id="o4" class="red">Cancella tutto</button>`;
+  $('o1').onclick=()=>$('fphoto').click();
+  $('o2').onclick=exportData;
+  $('o3').onclick=()=>$('fimport').click();
+  $('o4').onclick=()=>{if(confirm('Cancellare tutto? Non si può annullare.')){D={photo:null,ar:1,problems:[]};idx=0;save();view='view';render()}};
+}
+
+/* ---------- Creazione / modifica ---------- */
+function newProblem(){
+  if(!D.photo){view='view';render();return}
+  edit={id:null,name:'',grade:'6A',holds:[],send:null};tool='s';view='edit';render();
+}
+function saveEdit(){
+  if(!edit.holds.length){toast('Aggiungi almeno una presa');return}
+  if(!edit.holds.some(h=>h.t==='s')&&!confirm('Manca la presa di start. Salvare lo stesso?'))return;
+  if(!edit.name.trim())edit.name='Blocco '+(D.problems.length+1);
+  if(edit.id){D.problems[idx]=edit}
+  else{edit.id=Date.now();D.problems.push(edit);idx=D.problems.length-1}
+  save();edit=null;view='view';render();toast('Blocco salvato');
+}
+function stageTap(x,y){
+  const s=$('stage').getBoundingClientRect();
+  const nx=(x-s.left)/s.width,ny=(y-s.top)/s.height;
+  if(nx<0||nx>1||ny<0||ny>1)return;
+  const rad=.03;
+  const k=edit.holds.findIndex(h=>Math.hypot((h.x-nx),(h.y-ny)*(s.height/s.width))<rad*1.4);
+  if(k>=0){
+    const h=edit.holds[k],n=ORDER.indexOf(h.t)+1;
+    if(h.t===tool&&false){}
+    /* primo tocco: porta al tipo selezionato; se già uguale, cicla; dopo Top elimina */
+    if(h.t!==tool)h.t=tool;
+    else if(n>=ORDER.length)edit.holds.splice(k,1);
+    else h.t=ORDER[n];
+  }else edit.holds.push({x:nx,y:ny,t:tool});
+  draw(edit.holds);
+}
+
+/* ---------- Salita (valutazione + salvataggio) ---------- */
+function sendDialog(){
+  const p=cur(),s=p.send||{a:1,g:p.grade,s:2};
+  let st=s.s;
+  const m=$('modal'),b=$('mbox');m.style.display='flex';
+  const paint=()=>{
+    b.innerHTML=`<h2>${esc(p.name)} · ${p.grade}</h2>
+    <label>Tentativi<br><input id="ma" type="number" min="1" value="${s.a}" style="width:100%"></label>
+    <label>Il tuo voto di difficoltà<br><select id="mg" style="width:100%">${GR.map(g=>`<option ${g===s.g?'selected':''}>${g}</option>`).join('')}</select></label>
+    <div>Bellezza del blocco<div class="stars">${[1,2,3].map(n=>`<button data-s="${n}" class="${n<=st?'on':''}">${n<=st?'★':'☆'}</button>`).join('')}</div></div>
+    <div class="row"><button id="mc">Annulla</button>${p.send?'<button id="mr" class="red">Rimuovi</button>':''}<button id="ms" class="pri">Salva salita</button></div>`;
+    b.querySelectorAll('[data-s]').forEach(x=>x.onclick=()=>{s.a=+$('ma').value||1;s.g=$('mg').value;st=+x.dataset.s===st?0:+x.dataset.s;paint()});
+    $('mc').onclick=()=>m.style.display='none';
+    if($('mr'))$('mr').onclick=()=>{p.send=null;save();m.style.display='none';render()};
+    $('ms').onclick=()=>{p.send={d:p.send?p.send.d:Date.now(),a:Math.max(1,+$('ma').value||1),g:$('mg').value,s:st};save();m.style.display='none';render();toast('Salita registrata')};
+  };paint();
+}
+
+/* ---------- Foto, backup ---------- */
+$('fphoto').onchange=e=>{
+  const f=e.target.files[0];if(!f)return;
+  const img=new Image,u=URL.createObjectURL(f);
+  img.onload=()=>{
+    const M=1800,k=Math.min(1,M/Math.max(img.width,img.height));
+    const c=document.createElement('canvas');c.width=Math.round(img.width*k);c.height=Math.round(img.height*k);
+    c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+    D.photo=c.toDataURL('image/jpeg',.85);D.ar=c.width/c.height;
+    URL.revokeObjectURL(u);save();view='view';render();toast('Foto salvata');
+  };img.src=u;e.target.value='';
+};
+function exportData(){
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([JSON.stringify(D)],{type:'application/json'}));
+  a.download='pannello-backup.json';a.click();
+}
+$('fimport').onchange=e=>{
+  const f=e.target.files[0];if(!f)return;
+  const r=new FileReader;
+  r.onload=()=>{try{const d=JSON.parse(r.result);if(!Array.isArray(d.problems))throw 0;D=d;idx=0;save();view='view';render();toast('Backup importato')}catch(x){toast('File non valido')}};
+  r.readAsText(f);e.target.value='';
+};
+
+/* ---------- Swipe e tocchi ---------- */
+let sx,sy,st0;
+const stg=$('stage');
+stg.addEventListener('pointerdown',e=>{sx=e.clientX;sy=e.clientY;st0=Date.now()});
+stg.addEventListener('pointerup',e=>{
+  if(sx==null)return;
+  const dx=e.clientX-sx,dy=e.clientY-sy;sx=null;
+  if(view==='edit'){if(Math.abs(dx)<10&&Math.abs(dy)<10)stageTap(e.clientX,e.clientY);return}
+  if(view==='view'&&Math.abs(dx)>50&&Math.abs(dx)>Math.abs(dy)*1.5)go(dx<0?1:-1);
+});
+function go(d){
+  const n=D.problems.length;if(n<2)return;
+  idx=(idx+d+n)%n;render();
+  stg.animate([{transform:`translateX(${d*60}px)`,opacity:.2},{transform:'none',opacity:1}],{duration:220,easing:'ease-out'});
+}
+document.addEventListener('keydown',e=>{if(view==='view'){if(e.key==='ArrowRight')go(1);if(e.key==='ArrowLeft')go(-1)}});
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{
+  if(view==='edit'&&!confirm('Uscire senza salvare il blocco?'))return;
+  edit=null;const v=b.dataset.v;
+  if(v==='new'){newProblem();return}
+  view=v;render();
+});
+$('modal').onclick=e=>{if(e.target.id==='modal')e.target.style.display='none'};
+window.addEventListener('resize',fit);
+$('ph').onload=fit;
+
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{});
+(async()=>{const d=await load();if(d&&d.problems)D=d;render()})();
+</script>
+</body>
+</html>
